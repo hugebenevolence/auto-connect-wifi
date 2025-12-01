@@ -1,0 +1,26 @@
+# Ignore exported/imported Wi-Fi profile XMLs (may contain plaintext passwords)
+profiles/*.xml
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual envs and build folders
+.venv/
+.venv_build/
+venv/
+env/
+
+# PyInstaller build artifacts
+dist/
+build/
+*.spec
+
+# Executables
+*.exe
+
+# Editor and OS files
+.vscode/
+.DS_Store
+Thumbs.db
