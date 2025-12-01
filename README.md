@@ -75,3 +75,33 @@ What next?
 - Add management operations (rename/unhide) for XML files in `./profiles`.
 
 If you'd like, I can run a build now or demo exporting/importing profiles — tell me which.
+
+Building an installer (Windows)
+
+The project includes an Inno Setup script `installer.iss` and a helper `make_installer.ps1`.
+
+Steps to create a user-friendly installer that places a shortcut on the user's Desktop:
+
+1. Build the single-file executable (already done by the `build_exe.ps1` script):
+
+```powershell
+.\build_exe.ps1
+```
+
+2. Compile the Inno Setup script to make a Windows installer. If Inno Setup is installed, run:
+
+```powershell
+.\make_installer.ps1
+```
+
+If Inno Setup is not installed, download it from https://jrsoftware.org/, open `installer.iss` in the Inno Setup IDE and press Compile.
+
+What the installer does
+- Installs `AutoWifiHelperGUI.exe` into `Program Files\Auto_login_wifi` by default.
+- Creates a Start Menu entry and an optional Desktop shortcut (user-selectable during install).
+- Optionally runs the program after install (the installer script includes a postinstall run option).
+
+Notes about distributing
+- Deliver the generated `Auto_login_wifi_Setup.exe` to recipients. They will run a standard installer UI and can choose to create a desktop icon.
+- The installer requires Administrator privileges to write to `Program Files` (Inno Setup requests elevation during install).
+
