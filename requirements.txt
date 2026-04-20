@@ -1,1 +1,2 @@
-PySimpleGUI
+# No external Python dependencies are required.
+# The GUI uses tkinter, which is included with standard Python on Windows.

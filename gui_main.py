@@ -1,6 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
-import threading
+from tkinter import ttk, filedialog
 import time
 import os
 
@@ -123,7 +122,7 @@ class WifiGUI(tk.Tk):
             return
         # Try Windows netsh first
         out, pwd = show_profile_details(name)
-        if out and 'Profile' in out:
+        if out:
             self.write(out)
         if pwd:
             self.write(f'Recovered password: {pwd}')
