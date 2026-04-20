@@ -13,6 +13,7 @@ Project files
 - `main.py` — netsh helper functions and a simple CLI.
 - `gui_main.py` — Tkinter GUI for interactive use.
 - `profiles/` — local storage for exported/imported profile XML files.
+- `TROUBLESHOOTING.md` — guide xử lý lỗi thường gặp.
 
 Notes and prerequisites
 - This tool only runs on Windows because it relies on the `netsh` command.
@@ -104,4 +105,3 @@ What the installer does
 Notes about distributing
 - Deliver the generated `Auto_login_wifi_Setup.exe` to recipients. They will run a standard installer UI and can choose to create a desktop icon.
 - The installer requires Administrator privileges to write to `Program Files` (Inno Setup requests elevation during install).
-

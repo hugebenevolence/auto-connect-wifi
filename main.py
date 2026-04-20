@@ -4,10 +4,16 @@ import tempfile
 import argparse
 import re
 from pathlib import Path
+from xml.sax.saxutils import escape
 
 
 def run_netsh(args):
     """Run a netsh command and return its output as text."""
+    if os.name != "nt":
+        return (
+            "This tool only works on Windows (netsh is unavailable on this OS). "
+            f"Current os.name={os.name}."
+        )
     try:
         # capture bytes and decode trying utf-8 first, then platform encoding (mbcs)
         res = subprocess.run(["netsh"] + args, capture_output=True)
@@ -28,6 +34,8 @@ def run_netsh(args):
 def list_profiles():
     """Return list of saved Wi‑Fi profile names."""
     out = run_netsh(["wlan", "show", "profiles"])
+    if "only works on Windows" in out:
+        return []
     # Try to extract profile names robustly (handles different locales)
     profiles = []
     for line in out.splitlines():
@@ -40,11 +48,18 @@ def list_profiles():
         # skip headings like 'User profiles', 'Group policy profiles', or separators
         if not name:
             continue
-        if any(h in left_norm for h in ['profile', 'user profiles', 'group policy', 'giao diện', 'user profiles', 'user profile']):
+        if any(h in left_norm for h in ['profile', 'user profiles', 'group policy', 'giao diện', 'user profile']):
             # If left contains 'profile' it's likely an actual profile entry (e.g., 'All User Profile')
             # But skip when left is a header like 'User profiles' exactly
             if left_norm.startswith('user profiles') or left_norm.startswith('group policy'):
                 continue
+        if (
+            "profile" not in left_norm
+            and "hồ sơ" not in left_norm
+            and "prof" not in left_norm
+        ):
+            # Avoid capturing unrelated lines that include ":" in localized output.
+            continue
         # accept the name
         profiles.append(name)
     # Deduplicate while preserving order
@@ -161,12 +176,17 @@ def create_and_add_profile(ssid, password, authentication="WPA2PSK", encryption=
 
     Returns netsh output and the temp file path used.
     """
+    safe_ssid = escape(ssid)
+    safe_password = escape(password)
+    safe_authentication = escape(authentication)
+    safe_encryption = escape(encryption)
+
     xml_template = f'''<?xml version="1.0"?>
 <WLANProfile xmlns="http://www.microsoft.com/networking/WLAN/profile/v1">
-  <name>{ssid}</name>
+  <name>{safe_ssid}</name>
   <SSIDConfig>
     <SSID>
-      <name>{ssid}</name>
+      <name>{safe_ssid}</name>
     </SSID>
   </SSIDConfig>
   <connectionType>ESS</connectionType>
@@ -174,20 +194,21 @@ def create_and_add_profile(ssid, password, authentication="WPA2PSK", encryption=
   <MSM>
     <security>
       <authEncryption>
-        <authentication>{authentication}</authentication>
-        <encryption>{encryption}</encryption>
+        <authentication>{safe_authentication}</authentication>
+        <encryption>{safe_encryption}</encryption>
         <useOneX>false</useOneX>
       </authEncryption>
       <sharedKey>
         <keyType>passPhrase</keyType>
         <protected>false</protected>
-        <keyMaterial>{password}</keyMaterial>
+        <keyMaterial>{safe_password}</keyMaterial>
       </sharedKey>
     </security>
   </MSM>
 </WLANProfile>
 '''
-    fd, path = tempfile.mkstemp(suffix=".xml", prefix=f"wifi_{ssid}_")
+    safe_prefix = re.sub(r"[^A-Za-z0-9_.-]", "_", ssid).strip("_") or "wifi"
+    fd, path = tempfile.mkstemp(suffix=".xml", prefix=f"wifi_{safe_prefix}_")
     with os.fdopen(fd, "w", encoding="utf-8") as f:
         f.write(xml_template)
     out = import_profile_from_xml(path)
